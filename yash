@@ -1,0 +1,271 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int mutex = 1;
+int full = 0;
+int empty = 3, x = 0;
+
+void producer() {
+    --mutex;
+    ++full;
+    --empty;
+    x++;
+    printf("\nProducer produces item %d", x);
+    ++mutex;
+}
+
+void consumer() {
+    --mutex;
+    --full;
+    ++empty;
+    printf("\nConsumer consumes item %d", x);
+    x--;
+    ++mutex;
+}
+
+int main() {
+    int n, i = 1;
+    printf("\n1. Press 1 for Producer"
+           "\n2. Press 2 for Consumer"
+           "\n3. Press 3 for Exit");
+
+    while (i > 0) {
+        printf("\nEnter your choice: ");
+        scanf("%d", &n);
+        // Switch Cases
+        switch (n) {
+        case 1:
+            if (mutex == 1 && empty != 0) {
+                producer();
+            } else {
+                printf("Buffer is full!\n");
+            }
+            break;
+        case 2:
+            if (mutex == 1 && full != 0) {
+                consumer();
+            } else {
+                printf("Buffer is empty!\n");
+            }
+            break;
+        case 3:
+            exit(0);
+            break;
+        default:
+            printf("Invalid choice!\n");
+            break;
+        }
+    }
+    return 0;
+}
+----------------------------------------------------------------
+// Writer Process
+#include <stdio.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+int main() {
+    int fd;
+    char buf[1024] = "Hello BIT";
+    char *myfifo = "/ise/Desktop/tmp";
+
+    // Create the FIFO (named pipe)
+    mkfifo(myfifo, 0666);
+
+    printf("Run Reader process to read the FIFO File\n");
+
+    // Open FIFO for write only
+    fd = open(myfifo, O_WRONLY);
+
+    // Write data to FIFO
+    write(fd, buf, sizeof(buf));
+
+    // Close the FIFO
+    close(fd);
+
+    // Remove the FIFO
+    unlink(myfifo);
+
+    return 0;
+}
+// Reader Process
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <stdio.h>
+
+#define MAX_BUF 1024
+
+int main() {
+    int fd;
+    char *myfifo = "/ise/Desktop/tmp";
+    char buf[MAX_BUF];
+
+    // Open FIFO for read only
+    fd = open(myfifo, O_RDONLY);
+
+    // Read from FIFO
+    read(fd, buf, MAX_BUF);
+
+    // Display the message
+    printf("Received: %s\n", buf);
+
+    // Close the FIFO
+    close(fd);
+
+    return 0;
+}
+---------------------------------------------------------------
+#include <stdio.h>
+
+int main() {
+    int bt[20], wt[20], tat[20], i, n;
+    float wtavg, tatavg;
+
+    // Input number of processes
+    printf("\nEnter the number of processes -- ");
+    scanf("%d", &n);
+
+    // Input burst times for each process
+    for(i = 0; i < n; i++) {
+        printf("\nEnter Burst Time for Process %d -- ", i);
+        scanf("%d", &bt[i]);
+    }
+
+    wt[0] = 0;  // Waiting time for the first process is 0
+    wtavg = 0;
+    tat[0] = bt[0];  // Turnaround time for the first process is its burst time
+    tatavg = bt[0];
+
+    // Calculate waiting times and turnaround times for each process
+    for(i = 1; i < n; i++) {
+        wt[i] = wt[i - 1] + bt[i - 1];
+        tat[i] = wt[i] + bt[i];
+        wtavg += wt[i];
+        tatavg += tat[i];
+    }
+
+    // Print process information
+    printf("\n\tPROCESS\t\tBURST TIME\tWAITING TIME\tTURNAROUND TIME\n");
+    for(i = 0; i < n; i++) {
+        printf("\n\tP%d\t\t%d\t\t%d\t\t%d", i, bt[i], wt[i], tat[i]);
+    }
+
+    // Print average waiting time and turnaround time
+    printf("\n\nAverage Waiting Time -- %f", wtavg / n);
+    printf("\nAverage Turnaround Time -- %f", tatavg / n);
+
+    return 0;
+}
+
+#include <stdio.h>
+
+int main() {
+    int p[20], bt[20], wt[20], tat[20], i, k, n, temp;
+    float wtavg, tatavg;
+
+    // Input number of processes
+    printf("\nEnter the number of processes -- ");
+    scanf("%d", &n);
+
+    // Input burst times for each process
+    for(i = 0; i < n; i++) {
+        p[i] = i;
+        printf("Enter Burst Time for Process %d -- ", i);
+        scanf("%d", &bt[i]);
+    }
+
+    // Sort processes based on burst time using bubble sort
+    for(i = 0; i < n; i++) {
+        for(k = i + 1; k < n; k++) {
+            if(bt[i] > bt[k]) {
+                // Swap burst times
+                temp = bt[i];
+                bt[i] = bt[k];
+                bt[k] = temp;
+
+                // Swap process numbers
+                temp = p[i];
+                p[i] = p[k];
+                p[k] = temp;
+            }
+        }
+    }
+
+    wt[0] = 0;  // Waiting time for the first process is 0
+    wtavg = 0;
+    tat[0] = bt[0];  // Turnaround time for the first process is its burst time
+    tatavg = bt[0];
+
+    // Calculate waiting times and turnaround times for each process
+    for(i = 1; i < n; i++) {
+        wt[i] = wt[i - 1] + bt[i - 1];
+        tat[i] = wt[i] + bt[i];
+        wtavg += wt[i];
+        tatavg += tat[i];
+    }
+
+    // Print process information
+    printf("\n\tPROCESS\t\tBURST TIME\tWAITING TIME\tTURNAROUND TIME\n");
+    for(i = 0; i < n; i++) {
+        printf("\n\tP%d\t\t%d\t\t%d\t\t%d", p[i], bt[i], wt[i], tat[i]);
+    }
+
+    // Print average waiting time and turnaround time
+    printf("\n\nAverage Waiting Time -- %f", wtavg / n);
+    printf("\nAverage Turnaround Time -- %f", tatavg / n);
+
+    return 0;
+}
+-----------------------------------------------
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+int main() {
+    // Variable to store the process ID.
+    pid_t child_pid;
+
+    // Create a child process using fork().
+    child_pid = fork();
+    if (child_pid == -1) {
+        // Error occurred during fork.
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+
+    if (child_pid == 0) {
+        // This code executes in the child process.
+        printf("Child process (PID: %d) is running.\n", getpid());
+        
+        // Execute a different program using exec().
+        execl("/bin/date", "date", NULL);
+        
+        // If execl fails, exit the child process.
+        perror("execl");
+        exit(EXIT_FAILURE);
+    } else {
+        // This code executes in the parent process.
+        printf("Parent process (PID: %d) is waiting for the child to terminate.\n", getpid());
+        
+        // Wait for the child process to terminate using wait().
+        int status;
+        wait(&status);
+        printf("Parent resumes\n");
+
+        // Check how the child process terminated.
+        if (WIFEXITED(status)) {
+            printf("\nChild process (PID: %d) terminated with status %d.\n", child_pid, WEXITSTATUS(status));
+        } else if (WIFSIGNALED(status)) {
+            printf("\nChild process (PID: %d) terminated due to signal %d.\n", child_pid, WTERMSIG(status));
+        } else {
+            printf("\nChild process (PID: %d) terminated abnormally.\n", child_pid);
+        }
+    }
+
+    return 0;
+}
